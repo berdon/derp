@@ -92,7 +92,7 @@ public class MainActivity extends Activity {
 ```
 
 ## Oh, ok...that's cool
-No, wait, it is. `DataBinding<?>`s let us modify primitives and see the changes for free. You can path into any hierarchy, including arrays. (Ie. setText:Some.Object[2].Here)
+No, wait, it is. `DataBinding<?>`s let us modify primitives and see the changes for free.
 
 **MainActivity.java**
 ```java
@@ -147,7 +147,7 @@ public class Model {
 </LinearLayout>
 ```
 
-Note: *Name corresponds to the Name field in the bound property (the Model object).*
+Note: *Name corresponds to the Name field in the bound property (the Model object).* You can path into any hierarchy, including arrays. (Ie. setText:Some.Object[2].Here)
 
 **MainActivity.java**
 ```java
