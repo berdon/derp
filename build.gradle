@@ -1,0 +1,101 @@
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+sourceCompatibility = 1.5
+targetCompatibility = 1.7
+
+group = "com.jajuka"
+archivesBaseName = "derp"
+version = '1.0.0'
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives jar
+    archives javadocJar, sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'Derp', 'Implementation-Version': version
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    provided
+}
+
+// Include provided for compilation
+sourceSets.main.compileClasspath += configurations.provided
+sourceSets.test.compileClasspath += configurations.provided
+
+dependencies {
+    provided group: 'com.google.android', name: 'android', version: '4.0.1.2'
+    testCompile group: 'com.google.android', name: 'android', version: '4.0.1.2'
+    testCompile group: 'com.google.android', name: 'android-test', version: '4.0.1.2'
+    testCompile group: 'org.mockito', name: 'mockito-all', version: '1.8.4'
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project {
+                name 'Derp'
+                packaging 'jar'
+                // optionally artifactId can be defined here
+                description 'Databinding for Android'
+                url 'https://github.com/berdon/derp'
+
+                scm {
+                    url 'scm:git@github.com:berdon/derp.git'
+                    connection 'scm:git@github.com:berdon/derp.git'
+                    developerConnection 'scm:git@github.com:berdon/derp.git'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'berdon'
+                        name 'Austin Hanson'
+                        email 'berdon@gmail.com'
+                    }
+                }
+            }
+        }
+    }
+}
