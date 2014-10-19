@@ -20,15 +20,25 @@ For starters, stuff. List stuff.
 **activity_main.xml**
 ```xml
 <ListView xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/listview"
               android:layout_width="match_parent"
               android:layout_height="match_parent" />
+```
+
+**item_text.xml**
+```xml
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/text"
+              android:tag="setText:"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content" />
 ```
 
 **MainActivity.java**
 ```java
 public class MainActivity extends Activity {
     // Create a DataBinding for a list of Models
-    @Bind(R.id.text)
+    @Bind(value = R.id.listview, repeat = true, layoutId = R.layout.item_text)
     private List<String> mNames = new LinkedList<String>();
 
     @Override
