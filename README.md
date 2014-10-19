@@ -11,7 +11,7 @@ What's left?
 
 **Where doth one get derp?**
 ```gradle
-compile 'com.jakewharton:butterknife:5.1.2'
+compile 'com.jajuka:derp:1.0.0'
 ```
 
 ## What can derp do?
