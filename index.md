@@ -19,6 +19,11 @@ compile 'com.jajuka:derp:1.0.0'
 ```
 
 ## What can derp do?
+To dive into a sample project using Derp to create a TODO list app replete with lists and item view `onclick` handling goodness, checkout [derp-todo](http://berdon.github.com/derp-todo).
+
+<img src="{{ site.baseurl }}{{ post.url }}/assets/derp-todo-01.png" width=250>
+
+### To wet your whistle
 For starters, stuff. List stuff.
 
 **activity_main.xml**

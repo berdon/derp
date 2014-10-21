@@ -4,7 +4,7 @@ email: berdon@gmail.com
 description: > # this means to ignore newlines until "baseurl:"
   Bind your data. Derp.
 baseurl: "/derp" # the subpath of your site, e.g. /blog/
-url: "http://austinhanson.com" # the base hostname & protocol for your site
+url: "http://berdon.github.io" # the base hostname & protocol for your site
 twitter_username: austinhanson
 github_username:  berdon
 
