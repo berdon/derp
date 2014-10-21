@@ -17,6 +17,93 @@ compile 'com.jajuka:derp:1.0.1'
 **Or**
 Download the [jar](https://oss.sonatype.org/content/repositories/releases/com/jajuka/derp/1.0.1/derp-1.0.1.jar).
 
+## Using derp
+Data binding is a two step process:
+1. Tell derp in code (.java) what objects should be bound to what views
+2. Tell derp in layouts (.xml) how to assign data
+
+#### Binding an object to a view
+```java
+// Binding to a single object
+@Bind(R.id.text)
+private DataBinding<String> myString = new DataBinding<String>("Some string");
+
+// Binding to a list of objects
+@Bind(value = R.id.listview, repeat = true, layoutId = R.layout.item_text)
+private DataBinding<List<String>> myStrings = new DataBinding<List<String>>(new List<String>());
+
+// onCreate { ...
+        setContentView(R.layout.activity_main);
+
+        // Bind our data
+        Derp.bind(this);
+// }
+```
+
+#### Specifying object fields/method assignment
+```xml
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/text"
+              android:tag="setText:"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content" />
+
+<ListView xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/listview"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent" />
+```
+
+And the **item_text.xml**
+```xml
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/text"
+              android:tag="setText:"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content" />
+```
+
+And you're done.
+
+### What about complex models?
+Derp supports complex model hierarchies:
+
+**ComplexObject.java**
+```java
+public class ComplexObject {
+    public String Name;
+    public SomeOtherObject Something;
+
+    public ComplexObject(String one, String two) {
+        Name = one;
+        Something = new SomeOtherObject(two);
+    }
+
+    public static class SomeOtherObject {
+        public String SomeProperty;
+
+        public SomeOtherObject(String one) {
+            SomeProperty = one;
+        }
+    }
+}
+```
+
+#### Binding the object to the view:
+```java
+@Bind(R.id.text)
+private DataBinding<ComplexObject> myObject = new DataBinding<ComplexObject>(new ComplexObject("herp", "derp"));
+```
+
+#### Assigning the value
+```xml
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/text"
+              android:tag="setText:Something.SomeProperty"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content" />
+```
+
 ## What can derp do?
 To dive into a sample project using Derp to create a TODO list app replete with lists and item view `onclick` handling goodness, checkout [derp-todo](http://github.com/berdon/derp-todo).
 
