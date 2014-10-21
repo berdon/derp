@@ -22,7 +22,7 @@ compile 'com.jajuka:derp:1.0.0'
 Download the [jar](https://oss.sonatype.org/content/repositories/releases/com/jajuka/derp/1.0.0/derp-1.0.0.jar).
 
 ## What can derp do?
-To dive into a sample project using Derp to create a TODO list app replete with lists and item view `onclick` handling goodness, checkout [derp-todo](http://berdon.github.com/derp-todo).
+To dive into a sample project using Derp to create a TODO list app replete with lists and item view `onclick` handling goodness, checkout [derp-todo](http://github.com/berdon/derp-todo).
 
 <img src="{{ site.baseurl }}{{ post.url }}/assets/derp-todo-01.png" width=250>
 
