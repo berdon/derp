@@ -8,9 +8,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.CursorAdapter;
 
 import com.jajuka.derp.Bind;
-import com.jajuka.derp.BindStrategy;
+import com.jajuka.derp.binder.adapter.BindStrategy;
 import com.jajuka.derp.binder.adapter.LayoutFactory;
 import com.jajuka.derp.util.Reflect;
 
@@ -24,7 +25,7 @@ import java.util.WeakHashMap;
 /* pkg */ class AdapterBinderContext extends BinderContext implements View.OnClickListener {
     private WeakReference<LayoutInflater> mLayoutInflater;
     private LayoutFactory mLayoutFactory;
-    private BaseAdapter mAdapter;
+    private android.widget.BaseAdapter mAdapter;
 
     private SimpleOnViewCreatedCallback mOnViewCreatedCallback = new SimpleOnViewCreatedCallback();
 
@@ -80,7 +81,7 @@ import java.util.WeakHashMap;
                     // Create a new simple adapter
                     mAdapter = new ListAdapter(boundView.getContext(), getBind().layoutId(), (List<Object>) source);
                 } else if (source instanceof Cursor) {
-
+                    mAdapter = new CursorAdapter(boundView.getContext(), getBind().layoutId(), (Cursor) source);
                 } else {
                     throw new IllegalStateException("Bound object must be either an array, List or Cursor");
                 }
@@ -88,6 +89,11 @@ import java.util.WeakHashMap;
                 // Set the adapter
                 ((AdapterView) boundView).setAdapter(mAdapter);
             } else {
+                // Swap out the cursor if the cursor has changed
+                if (source instanceof Cursor && source != ((CursorAdapter) mAdapter).getCursor()) {
+                    ((CursorAdapter) mAdapter).changeCursor((Cursor) source);
+                }
+
                 mAdapter.notifyDataSetChanged();
             }
         } else if (boundView instanceof ViewGroup) {
@@ -105,6 +111,54 @@ import java.util.WeakHashMap;
                     inflater.inflate(getBind().layoutId(), (ViewGroup) boundView);
                 }
             }
+        }
+    }
+
+    private class CursorAdapter extends android.widget.CursorAdapter {
+        private final WeakHashMap<View, BindStrategy> mBindStrategies = new WeakHashMap<View, BindStrategy>();
+        private final WeakHashMap<View, WeakReference<View>> mChildViewToRootItemViewMap = new WeakHashMap<View, WeakReference<View>>();
+        private final int mLayoutId;
+
+        private CursorAdapter(Context context, int layoutId, Cursor c) {
+            super(context, c);
+            mLayoutId = layoutId;
+        }
+
+        @Override
+        public View newView(Context context, Cursor cursor, ViewGroup parent) {
+            mOnViewCreatedCallback.target = cursor;
+            mOnViewCreatedCallback.methodMap = new WeakHashMap<View, Method>();
+            mOnViewCreatedCallback.pathMap = new WeakHashMap<View, String>();
+            mOnViewCreatedCallback.clickViews = new WeakHashMap<View, Void>();
+
+            final LayoutInflater inflater = getLayoutInflater(context);
+            if (inflater == null) {
+                return null;
+            }
+
+            final View view = inflater.inflate(mLayoutId, null);
+            final BindStrategy bindStrategy = new BindStrategy(
+                    view,
+                    -1,
+                    mOnViewCreatedCallback.methodMap,
+                    mOnViewCreatedCallback.pathMap);
+            view.setTag(bindStrategy);
+
+            // Map the view to the BindStrategy
+            mBindStrategies.put(view, bindStrategy);
+
+            // Map any click handler to the root item layout
+            for (View childView : mOnViewCreatedCallback.clickViews.keySet()) {
+                mChildViewToRootItemViewMap.put(childView, new WeakReference<View>(view));
+            }
+
+            return view;
+        }
+
+        @Override
+        public void bindView(View view, Context context, Cursor cursor) {
+            final BindStrategy bindStrategy = (BindStrategy) view.getTag();
+            bindStrategy.bind(cursor.getPosition(), cursor);
         }
     }
 
@@ -220,7 +274,8 @@ import java.util.WeakHashMap;
         final Method onClickMethod = mOnItemViewClickMethods.get(view);
 
         // Grab the root item layout
-        final WeakReference<View> rootItemViewReference = mAdapter.mChildViewToRootItemViewMap.get(view);
+        final WeakReference<View> rootItemViewReference = (mAdapter instanceof CursorAdapter ?
+                ((CursorAdapter) mAdapter).mChildViewToRootItemViewMap.get(view) : ((BaseAdapter) mAdapter).mChildViewToRootItemViewMap.get(view));
         if (rootItemViewReference == null) {
             return;
         }
@@ -231,7 +286,8 @@ import java.util.WeakHashMap;
         }
 
         // Grab the bind strategy for the root item view
-        final BindStrategy bindStrategy = mAdapter.mBindStrategies.get(rootItemView);
+        final BindStrategy bindStrategy = (mAdapter instanceof CursorAdapter ?
+                ((CursorAdapter) mAdapter).mBindStrategies.get(rootItemView) : ((BaseAdapter) mAdapter).mBindStrategies.get(rootItemView));
         if (bindStrategy == null) {
             return;
         }

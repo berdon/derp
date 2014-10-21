@@ -1,4 +1,4 @@
-package com.jajuka.derp;
+package com.jajuka.derp.binder.adapter;
 
 import android.view.View;
 

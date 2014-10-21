@@ -1,5 +1,7 @@
 package com.jajuka.derp.util;
 
+import android.database.Cursor;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -15,10 +17,10 @@ public class Reflect {
 
             for (String specifier : specifications) {
                 // Pull of indices
-                Integer index = null;
-                if (specifier.matches("^.*\\[[0-9]*\\]$")) {
+                String index = null;
+                if (specifier.matches("^.*\\[[a-zA-Z0-9_]*\\]$")) {
                     String[] tokens = specifier.split("(\\[|\\])");
-                    index = Integer.parseInt(tokens[1]);
+                    index = tokens[1];
                     specifier = tokens[0];
                 }
 
@@ -45,11 +47,13 @@ public class Reflect {
                 // Handle indexing
                 if (index != null) {
                     if (target instanceof String) {
-                        target = ((String) target).charAt(index);
+                        target = ((String) target).charAt(Integer.valueOf(index));
                     } else if (target instanceof Object[]) {
-                        target = ((Object[]) target)[index];
+                        target = ((Object[]) target)[Integer.valueOf(index)];
                     } else if (target instanceof List<?>) {
-                        target = ((List<?>) target).get(index);
+                        target = ((List<?>) target).get(Integer.valueOf(index));
+                    } else if (target instanceof Cursor) {
+                        target = resolveColumnValue((Cursor) target, index);
                     } else {
                         throw new IllegalAccessException("Unable to index into " + target);
                     }
@@ -62,6 +66,25 @@ public class Reflect {
         }
 
         return null;
+    }
+
+    private static Object resolveColumnValue(Cursor cursor, String columnName) {
+        final int columnIndex = cursor.getColumnIndex(columnName);
+        final int columnType = cursor.getType(columnIndex);
+
+        switch (columnType) {
+            case Cursor.FIELD_TYPE_STRING:
+                return cursor.getString(columnIndex);
+            case Cursor.FIELD_TYPE_INTEGER:
+                return cursor.getInt(columnIndex);
+            case Cursor.FIELD_TYPE_BLOB:
+                return cursor.getBlob(columnIndex);
+            case Cursor.FIELD_TYPE_FLOAT:
+                return cursor.getFloat(columnIndex);
+            case Cursor.FIELD_TYPE_NULL:
+            default:
+                return null;
+        }
     }
 
     public static Method findMethod(Object target, String name, Class<?>... parameters) throws NoSuchMethodException {
