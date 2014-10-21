@@ -19,6 +19,7 @@ Download the [jar](https://oss.sonatype.org/content/repositories/releases/com/ja
 
 ## Using derp
 Data binding is a two step process:
+
 1. Tell derp in code (.java) what objects should be bound to what views
 2. Tell derp in layouts (.xml) how to assign data
 
@@ -33,8 +34,6 @@ private DataBinding<String> myString = new DataBinding<String>("Some string");
 private DataBinding<List<String>> myStrings = new DataBinding<List<String>>(new List<String>());
 
 // onCreate { ...
-        setContentView(R.layout.activity_main);
-
         // Bind our data
         Derp.bind(this);
 // }
@@ -89,7 +88,7 @@ public class ComplexObject {
 }
 ```
 
-#### Binding the object to the view:
+#### Binding the object to the view
 ```java
 @Bind(R.id.text)
 private DataBinding<ComplexObject> myObject = new DataBinding<ComplexObject>(new ComplexObject("herp", "derp"));
