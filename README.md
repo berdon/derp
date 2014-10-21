@@ -1,21 +1,21 @@
-DataBinding for Android
+Data Binding for Android
 ====
 Derp is a small, reflection (*for now*) driven library that makes it easy to bind data to XML layouts. The big features at this point are:
 * Efficiently serves list data via `Adapters` (yes, with `View` recycling)
 * Supports primitive event driven updates via `DataBinding<?>`
+* Supports binding lists, arrays, and `Cursor`s
 
 What's left?
 * Adding support for complex objects implementing a `DataBinding<?>` interface to get free updates
-* `CursorAdapter` support
 * A better README
 
 **Where doth one get derp?**
 ```gradle
-compile 'com.jajuka:derp:1.0.0'
+compile 'com.jajuka:derp:1.0.1'
 ```
 
 **Or**
-Download the [jar](https://oss.sonatype.org/content/repositories/releases/com/jajuka/derp/1.0.0/derp-1.0.0.jar).
+Download the [jar](https://oss.sonatype.org/content/repositories/releases/com/jajuka/derp/1.0.1/derp-1.0.1.jar).
 
 ## What can derp do?
 To dive into a sample project using Derp to create a TODO list app replete with lists and item view `onclick` handling goodness, checkout [derp-todo](http://github.com/berdon/derp-todo).
