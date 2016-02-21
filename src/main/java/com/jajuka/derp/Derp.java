@@ -1,6 +1,7 @@
 package com.jajuka.derp;
 
 import android.app.Activity;
+import android.app.Fragment;
 import android.content.Context;
 import android.view.View;
 
@@ -18,10 +19,14 @@ import java.util.WeakHashMap;
  * Created by austinh on 10/18/14.
  */
 public class Derp {
-    private static final WeakHashMap<Context, DerpContext> sContexts = new WeakHashMap<Context, DerpContext>();
+    private static final WeakHashMap<Object, DerpContext> sContexts = new WeakHashMap<Object, DerpContext>();
 
     public static void bind(Activity activity) {
         final DerpContext derpContext = getDerpContext(activity);
+    }
+
+    public static void bind(Fragment fragment, View rootView) {
+        final DerpContext derpContext = getDerpContext(fragment, rootView);
     }
 
     private static DerpContext getDerpContext(Activity activity) {
@@ -35,12 +40,27 @@ public class Derp {
         return derpContext;
     }
 
+    private static DerpContext getDerpContext(Fragment fragment, View rootView) {
+        DerpContext derpContext = sContexts.get(fragment);
+
+        if (derpContext == null) {
+            derpContext = new DerpContext(fragment, rootView);
+            sContexts.put(fragment, derpContext);
+        }
+
+        return derpContext;
+    }
+
     public static class DerpContext implements DataBinding.Observer<Object> {
         private final WeakHashMap<View, BinderContext> mViewToBinder = new WeakHashMap<View, BinderContext>();
         private final WeakHashMap<DataBinding<?>, BinderContext> mBindingToBinder = new WeakHashMap<DataBinding<?>, BinderContext>();
 
         public DerpContext(Activity activity) {
             initialize(activity);
+        }
+
+        public DerpContext(Fragment fragment, View rootView) {
+            initialize(fragment, rootView);
         }
 
         private void initialize(Activity activity) {
@@ -101,6 +121,70 @@ public class Derp {
                     if (binder.isReadBound()) {
                         // Apply the data to the view
                         final Object value = Reflect.getValue(method, activity);
+                        binder.apply(value);
+                    }
+                }
+            }
+        }
+
+        private void initialize(Fragment fragment, View rootView) {
+            // Traverse activity
+            for (final Field field : fragment.getClass().getDeclaredFields()) {
+                if (field.isAnnotationPresent(Bind.class)) {
+                    // Grab the bind annotation
+                    final Bind bind = field.getAnnotation(Bind.class);
+
+                    // Grab the bound view
+                    final View boundView = rootView.findViewById(bind.value());
+
+                    // Make sure we found the binding view
+                    if (boundView == null) {
+                        throw new IllegalStateException("Unable to locate view to bind to");
+                    }
+
+                    // Create and track the binder context
+                    final BinderContext binder = createAndTrackBinderContext(bind, boundView);
+
+                    // Apply the data to the view
+                    if (binder.isReadBound()) {
+                        final Object value = Reflect.getValue(field, fragment);
+                        final boolean isBinder = value instanceof DataBinding<?>;
+                        binder.apply(isBinder ? ((DataBinding<?>) value).get() : value);
+
+                        // Register an observer if applicable
+                        if (isBinder) {
+                            // Grab the binding
+                            final DataBinding<?> dataBinding = (DataBinding<?>) value;
+
+                            // Register the derp context as the observer
+                            dataBinding.registerObserver(this);
+
+                            // Map the binding to the binder
+                            mBindingToBinder.put(dataBinding, binder);
+                        }
+                    }
+                }
+            }
+
+            for (final Method method : fragment.getClass().getDeclaredMethods()) {
+                if (method.isAnnotationPresent(Bind.class)) {
+                    // Grab the bind annotation
+                    final Bind bind = method.getAnnotation(Bind.class);
+
+                    // Grab the bound view
+                    final View boundView = rootView.findViewById(bind.value());
+
+                    // Make sure we found the binding view
+                    if (boundView == null) {
+                        throw new IllegalStateException("Unable to locate view to bind to");
+                    }
+
+                    // Create and track the binder context
+                    final BinderContext binder = createAndTrackBinderContext(bind, boundView);
+
+                    if (binder.isReadBound()) {
+                        // Apply the data to the view
+                        final Object value = Reflect.getValue(method, fragment);
                         binder.apply(value);
                     }
                 }
